@@ -1,9 +1,12 @@
 const net = require('net');
+var room = {}
 
 var server = net.createServer((client) => {
-    console.log("New Connect from " + client.address);
+    console.log("New Connect "); 
     client.on("data", (dataBuffer) => {
-        data = JSON.stringify(dataBuffer);
+        console.log(dataBuffer.toString());
+        data = JSON.parse(dataBuffer.toString());
+        console.log(data);
         switch(data["type"]) {
             case "search":
                 search(client, data);
@@ -18,17 +21,22 @@ var server = net.createServer((client) => {
                 break;
         }
     });
-});    
+});
+server.listen({
+    host: 'localhost',
+    port: 8122
+});
 
 function search(client, data) {
     result = {type: "result"};
     if(typeof room[data['name']] === 'object') {
         result['msg'] = 1;
-        client.write(result);
     }else{
         result['msg'] = 0;
-        client.write(result);
     }
+    msg = JSON.stringify(result);
+    console.log(msg);
+    client.write(msg);
 }
 
 function join(client, data) {

@@ -4,16 +4,29 @@ import json
 
 def newConnect(num):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', 8001))
+    s.connect(('localhost', 8122))
     test = {
-        "name": "client",
-        "id": num,
-        "address": s.getsockname()
+        "type": "search",
+        "name": "room"
     }
     s.send(json.dumps(test).encode())
     msg = s.recv(1024)
-    print(json.loads(msg.decode()))
+    result = json.loads(msg.decode())
+    if result['msg']:
+        test = {
+            'type': 'join',
+            'name': 'room'
+        }
+        s.send(json.dumps(test).encode())
+    else:
+        test = {
+            'type': 'create',
+            'name': 'room'
+        }
+        s.send(json.dumps(test).encode())
     s.close()
 
-for i in range(100):
+newConnect(0);
+newConnect(1);
+for i in range(0):
     threading.Thread(target=newConnect, args=(i,)).start()
