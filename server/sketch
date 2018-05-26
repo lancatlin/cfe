@@ -1,0 +1,94 @@
+var server = net.server
+var room = {}
+
+function connect(socket){
+    connection.add(socket)
+}
+
+function receive(socket, data) {
+    switch (data['mode']){
+        case "search":
+            search(socket, data)
+            break;
+        case "create":
+            create(socket, data)
+            break;
+        case "join":
+            join(socket, data)
+            break;
+        case "remove":
+            remove(socket, data);
+            break;
+        else:
+            socket.write("NotFound");
+    }
+}
+
+funcion search(socket, data){
+    if(typeof(room[data['name]]) === socket){
+        socket.write({
+            "type": "result",
+            "msg":  "true"
+        });
+    }else{
+        socket.write("False"); 
+    }
+}
+
+function join(socket, data) {
+    roomSock = room[data['room']];
+    var Smsg = {
+        mode: "join",
+        socket: socket
+    }
+    var Cmsg = {
+        mode: "join",
+        socket: roomSock }
+    socket.write(Cmsg);
+    roomSock.write(Smsg);
+}
+
+function create(socket, data){
+    room[data["room"]] = socket;
+}
+
+{
+    "type": The MSG type,
+    "name": room name,
+    "socket": socket對象(buffer),
+    "msg": message
+}
+
+Search
+client{
+    "type": search,
+    "name": room name,
+}
+
+server{
+    "type": result,
+    "msg" : true / false
+}
+
+Join
+client{
+    "type": join,
+    "name": room name,
+}
+
+server{
+    "type": join,
+    "name": room name,
+    "socket": socket
+}
+
+Create
+client{
+    "type": create,
+    "name": room name,
+}
+
+server{
+    "type": result,
+    "msg":  true / false
+}
