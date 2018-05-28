@@ -1,12 +1,12 @@
 const net = require('net');
-var room = {}
+var room = {}   //紀錄房主資訊
 
 var server = net.createServer((client) => {
     console.log("New Connect "); 
     client.on("data", (dataBuffer) => {
-        console.log(dataBuffer.toString());
-        data = JSON.parse(dataBuffer.toString());
-        console.log(data);
+        const msg = dataBuffer.toString();
+        const data = JSON.parse(msg);   //將訊息轉換為json
+        console.log('read: ' + msg);
         switch(data["type"]) {
             case "search":
                 search(client, data);
@@ -27,33 +27,45 @@ server.listen({
     port: 8122
 });
 
-function search(client, data) {
-    result = {type: "result"};
-    if(typeof room[data['name']] === 'object') {
-        result['msg'] = 1;
-    }else{
-        result['msg'] = 0;
-    }
-    msg = JSON.stringify(result);
-    console.log(msg);
-    client.write(msg);
+function search(client, data) {     //查詢 查詢name房間是否存在
+    const result = {
+        type: "result",
+        msg: typeof room[data['name']] === 'object'
+    };
+    write(client, result);
 }
 
 function join(client, data) {
     let server = room[data['name']];
-    client.write({
+    cmsg = {
             type: "join",
             name: data['name'],
-            socket: server
-        });
-    server.write({
+            address: server['address']
+        };
+    smsg = {
             type: "join",
             name: data['name'],
-            socket: client
-        });
+            address: data['address'] 
+        };
+    write(client, cmsg);
+    write(server['socket'], smsg);
 }
 
 function create(client, data) {
-    room[data['name']] = client;
+    room[data['name']] = {
+        address: data['address'],
+        socket: client
+    };
+    const msg = {
+        'type': 'result',
+        'msg':  true
+    };
+    write(client, msg);
+}
+
+function write(client, data) {
+    const msg = JSON.stringify(data);
+    console.log('write: ' + msg);
+    client.write(msg);
 }
 

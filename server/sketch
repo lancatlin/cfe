@@ -74,18 +74,20 @@ Join
 client{
     "type": join,
     "name": room name,
+    "address": {wan: wanip, lan: lanip, port: port}
 }
 
 server{
     "type": join,
     "name": room name,
-    "socket": socket
+    "address": {wan: wanip, lan: lanip, port: port}
 }
 
 Create
 client{
     "type": create,
     "name": room name,
+    "address": {wan: wanip, lan: lanip, port: port}
 }
 
 server{
