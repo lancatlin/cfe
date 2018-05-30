@@ -6,7 +6,7 @@ import time
 
 def server(q):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 8122))
+    s.connect(connect)
     test = {
         "type": "search",
         "name": "room"
@@ -26,7 +26,7 @@ def server(q):
 
 def client(q):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 8122))
+    s.connect(connect)
     test = {
         "type": "search",
         "name": "room"
@@ -43,6 +43,13 @@ def client(q):
         q.put(read(s))
     s.close()
 
+def error (q): 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(connect)
+    msg = {"wha": "ha ha"}
+    write(s, msg)
+    read(s)
+
 
 def write(s, data):
     msg = json.dumps(data)
@@ -55,15 +62,16 @@ def read(s):
     return json.loads(msg.decode())
 
 address = {
-    'server': {'wan': 'server', 'lan': '192.168.1.9', 'port':'8888'},
-    'client': {'wan': 'client', 'lan': '192.168.1.37', 'port': '54312'}
+    'server': {'lan': '192.168.1.9', 'port':8888},
+    'client': {'lan': '192.168.1.37', 'port': 54312}
 }
+connect = ('127.0.0.1', 8122)
 
 q = queue.Queue()
-threading.Thread(target=server, args=(q,)).start()
+threading.Thread(target=error, args=(q,)).start()
 time.sleep(1)
-client(q)
 cmsg = q.get()
 smsg = q.get()
-print(cmsg == address['server'] and smsg == address['client'])
+print(cmsg['address']['port'] == address['server']['port'])
+print(smsg['address']['port'] == address['client']['port'])
 
