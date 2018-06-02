@@ -1,4 +1,5 @@
 import connect
+import time
 
 def one():
     c = connect.Conncet()
@@ -9,11 +10,15 @@ def one():
 
 
 name = 'room'
-address = ('127.0.0.1', 8888)
+address = ('127.0.0.1', 8122)
 c1 = connect.Connect(address)
 print(c1.search(name))
-c1.create(name, ('server', 8877), lambda data: print(data))
+result = c1.create(name, ('server', 8877), lambda data: print(data))
+print(result)
 c2 = connect.Connect(address)
 print(c2.search(name))
 print(c2.join(name, ('client', 1234)))
+time.sleep(1)
+c1.close()
+c2.close()
 

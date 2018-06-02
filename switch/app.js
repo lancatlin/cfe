@@ -25,6 +25,7 @@ var server = net.createServer((client) => {
             case "join":
                 join(client, data);
                 break;
+
             default:
                 console.log("error of data type");
                 client.write("type undefind");
@@ -49,12 +50,12 @@ function search(client, data) {     //查詢 查詢name房間是否存在
 }
 
 function join(client, data) {       //加入現有的房間
-    let server = room[data['name']];
+    var ser = room[data['name']];
     data['address']['wan'] = client.remoteAddress;
     cmsg = {
             type: "join",
             name: data['name'],
-            address: server['address']
+            address: ser['address']
         };
     smsg = {
             type: "join",
@@ -62,7 +63,7 @@ function join(client, data) {       //加入現有的房間
             address: data['address'] 
         };
     write(client, cmsg);
-    write(server['socket'], smsg);
+    write(ser['socket'], smsg);
 }
 
 function create(client, data) {     //建立房間
@@ -91,5 +92,13 @@ function write(client, data) {
     const msg = JSON.stringify(data);
     console.log('write: ' + msg);
     client.write(msg);
+}
+
+function close(client, data) {
+    for (var r in room) {
+        if (r['socket'] === client) {
+            r = undefined;
+        }
+    }
 }
 

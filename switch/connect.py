@@ -22,7 +22,7 @@ class Connect:
         except socket.timeout:
             return None
         except socket.error:
-            self.isServer = false
+            self.isServer = False
             return None
 
 
@@ -47,7 +47,7 @@ class Connect:
         while self.isServer:
             data = self.read()
             if data:
-                callback(data)
+                callback(data);
 
     def join(self, name, address):
         msg = {"type": "join", "name": name, "address": {"lan": address[0], "port": address[1]}}
@@ -56,11 +56,10 @@ class Connect:
         if data['type'] == 'err':
             return None
         addr = data['address']
+        self.name = name
         return (addr['wan'], addr['port'])
 
     def close(self):
-        if self.isServer:
-            msg = {"type": "close", "name": name} 
-            self.write(msg)
+        self.isServer = False
         self.socket.close()
 
