@@ -8,7 +8,10 @@ class Connect:
         self.socket.connect(address)
         self.socket.settimeout(5)
         self.isServer = False
+        self.server = None
         self.name = None
+        self.wan = self.read()['msg']
+        print('wan: ' + self.wan)
 
     def write(self, msg):
         s = json.dumps(msg)
@@ -18,13 +21,14 @@ class Connect:
         try:
             msg = self.socket.recv(1024).decode()
             s = json.loads(msg)
+            if s['type'] == 'err':
+                print(s['msg'])
             return s
         except socket.timeout:
             return None
         except socket.error:
             self.isServer = False
             return None
-
 
     def search(self, name):
         msg = {"type": "search", "name": name}
@@ -35,19 +39,22 @@ class Connect:
         msg = {"type": "create", "name": name, "address": {"lan": address[0], "port": address[1]}}
         self.write(msg)
         data = self.read()
-        if not data['msg']:
-            print(data['err'])
+        if data['type'] == 'err':
+            print(data['msg'])
+            return False
         else:
             self.isServer = True
             self.name = name
-            threading.Thread(target=self.receive, args=(callback,)).start()
-        return data['msg']
+            self.server = threading.Thread(target=self.receive, args=(callback,))
+            self.server.start()
+            return True
 
     def receive(self, callback):
         while self.isServer:
             data = self.read()
             if data:
-                callback(data);
+                callback(self.ipChoice(data['address']));
+        print("close Server");
 
     def join(self, name, address):
         msg = {"type": "join", "name": name, "address": {"lan": address[0], "port": address[1]}}
@@ -55,11 +62,15 @@ class Connect:
         data = self.read()
         if data['type'] == 'err':
             return None
-        addr = data['address']
         self.name = name
-        return (addr['wan'], addr['port'])
+        return self.ipChoice(data['address'])
 
     def close(self):
-        self.isServer = False
         self.socket.close()
+
+    def ipChoice(self, address):
+        if self.wan == address['wan']:
+            return (address['lan'], address['port'])
+        else:
+            return (address['wan'], address['port'])
 

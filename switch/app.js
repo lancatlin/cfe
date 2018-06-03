@@ -3,6 +3,10 @@ var room = {}   //紀錄房主資訊
 
 var server = net.createServer((client) => {
     console.log("New Connect "); 
+    write(client, {
+        "type": "result",
+        "msg": client.remoteAddress
+    });
     client.on("data", (dataBuffer) => {
         var data;
         try{
@@ -11,7 +15,7 @@ var server = net.createServer((client) => {
             console.log('read: ' + msg);
         }catch (err) {
             console.log(err);
-            client.write('Fail data');
+            write(client, {"type": "result", "msg": "fail data"});
             return;
         }
         switch(data["type"]) {          //依據type類型決定執行函數
@@ -31,11 +35,22 @@ var server = net.createServer((client) => {
                 client.write("type undefind");
         }
     });
+    client.on("close", () => {
+        console.log("close client");
+        for (var r in room) {
+            if (room[r]['socket'] === client) {
+                delete room[r];
+                break;
+            }
+        }
+    });
 });
 server.listen({
     host: 'localhost',
     port: 8122
-});
+}, () => {
+    console.log("Server start on 8122");
+    });
 
 function search(client, data) {     //查詢 查詢name房間是否存在
     if ( typeof data['name'] === 'string') {
@@ -45,7 +60,7 @@ function search(client, data) {     //查詢 查詢name房間是否存在
         };
         write(client, result);
     }else{
-        client.write('Fail search');
+        write(client, {"type": "err", "msg": 'fail name'});
     }
 }
 
@@ -67,7 +82,11 @@ function join(client, data) {       //加入現有的房間
 }
 
 function create(client, data) {     //建立房間
-    if ( typeof data['address'] !== 'object') {
+    if (typeof room[data['name']] === 'object'){
+        write(client, {"type": "err", "msg": "room exist"});
+        return;
+    }
+    else if ( typeof data['address'] !== 'object') {
         client.write("Can't find address");
         return;
     }
@@ -84,7 +103,7 @@ function create(client, data) {     //建立房間
         };
         write(client, msg);
     }else{
-        client.write("Fail address type");
+        write(client, {"type": "result", "msg": "fail address"});
     }
 }
 
@@ -92,13 +111,5 @@ function write(client, data) {
     const msg = JSON.stringify(data);
     console.log('write: ' + msg);
     client.write(msg);
-}
-
-function close(client, data) {
-    for (var r in room) {
-        if (r['socket'] === client) {
-            r = undefined;
-        }
-    }
 }
 
