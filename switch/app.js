@@ -39,18 +39,25 @@ var server = net.createServer((client) => {
         console.log("close client");
         for (var r in room) {
             if (room[r]['socket'] === client) {
+                console.log("delete room " + r);
                 delete room[r];
                 break;
             }
         }
     });
 });
-server.listen({
-    host: 'localhost',
-    port: 8122
-}, () => {
-    console.log("Server start on 8122");
-    });
+dns.lookup('lancatserver.ddns.net', (err, address, family) => {
+    if(err) {
+        console.log(err);
+    }else{
+        server.listen({
+            host: address,
+            port: 8122
+        }, () => {
+            console.log("Server start on 8122");
+            });
+    }
+});
 
 function search(client, data) {     //查詢 查詢name房間是否存在
     if ( typeof data['name'] === 'string') {

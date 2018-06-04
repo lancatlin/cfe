@@ -7,7 +7,6 @@ class Connect:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(address)
         self.socket.settimeout(5)
-        self.isServer = False
         self.server = None
         self.name = None
         self.wan = self.read()['msg']
@@ -25,9 +24,6 @@ class Connect:
                 print(s['msg'])
             return s
         except socket.timeout:
-            return None
-        except socket.error:
-            self.isServer = False
             return None
 
     def search(self, name):
@@ -51,9 +47,13 @@ class Connect:
 
     def receive(self, callback):
         while self.isServer:
-            data = self.read()
-            if data:
-                callback(self.ipChoice(data['address']));
+            try:
+                data = self.read()
+                if data:
+                    callback(self.ipChoice(data['address']));
+            except socket.error:
+                self.socket.close();
+                break;
         print("close Server");
 
     def join(self, name, address):
