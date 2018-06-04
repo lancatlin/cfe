@@ -1,4 +1,5 @@
 const net = require('net');
+const dns = require('dns');
 var room = {}   //紀錄房主資訊
 
 var server = net.createServer((client) => {
@@ -12,7 +13,7 @@ var server = net.createServer((client) => {
         try{
             const msg = dataBuffer.toString();
             data = JSON.parse(msg);   //將訊息轉換為json
-            console.log('read: ' + msg);
+            //console.log('read: ' + msg);
         }catch (err) {
             console.log(err);
             write(client, {"type": "result", "msg": "fail data"});
@@ -39,18 +40,25 @@ var server = net.createServer((client) => {
         console.log("close client");
         for (var r in room) {
             if (room[r]['socket'] === client) {
+                console.log("delete room " + r);
                 delete room[r];
                 break;
             }
         }
     });
 });
-server.listen({
-    host: 'localhost',
-    port: 8122
-}, () => {
-    console.log("Server start on 8122");
-    });
+dns.lookup('lancatserver.ddns.net', (err, address, family) => {
+    if(err) {
+        console.log(err);
+    }else{
+        server.listen({
+            host: address,
+            port: 8122
+        }, () => {
+            console.log("Server start on 8122");
+            });
+    }
+});
 
 function search(client, data) {     //查詢 查詢name房間是否存在
     if ( typeof data['name'] === 'string') {
@@ -82,6 +90,10 @@ function join(client, data) {       //加入現有的房間
 }
 
 function create(client, data) {     //建立房間
+    var addr;
+    var msg;
+
+    //房間已被建立
     if (typeof room[data['name']] === 'object'){
         write(client, {"type": "err", "msg": "room exist"});
         return;
@@ -97,7 +109,7 @@ function create(client, data) {     //建立房間
             address: data['address'],
             socket: client      //將socket儲存作為通訊管道
         };
-        const msg = {
+        msg = {
             'type': 'result',
             'msg':  true
         };
@@ -109,7 +121,7 @@ function create(client, data) {     //建立房間
 
 function write(client, data) {
     const msg = JSON.stringify(data);
-    console.log('write: ' + msg);
+    //console.log('write: ' + msg);
     client.write(msg);
 }
 
